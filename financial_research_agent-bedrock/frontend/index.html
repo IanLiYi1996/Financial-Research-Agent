@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>金融研究助手</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>金融研究助手</h1>
+            <p>基于AWS Bedrock的金融分析代理</p>
+        </header>
+
+        <div class="search-container">
+            <textarea id="query" placeholder="输入金融研究查询，例如：'分析苹果公司最近一个季度的表现'"></textarea>
+            <button id="submit-btn">开始研究</button>
+        </div>
+
+        <div class="loading-container" id="loading">
+            <div class="spinner"></div>
+            <div id="status-message">处理中...</div>
+        </div>
+
+        <div class="results-container" id="results">
+            <div class="summary-section">
+                <h2>执行摘要</h2>
+                <div id="summary"></div>
+            </div>
+
+            <div class="report-section">
+                <h2>详细报告</h2>
+                <div id="report"></div>
+            </div>
+
+            <div class="questions-section">
+                <h2>后续问题</h2>
+                <ul id="questions"></ul>
+            </div>
+
+            <div class="verification-section">
+                <h2>验证结果</h2>
+                <div id="verification"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

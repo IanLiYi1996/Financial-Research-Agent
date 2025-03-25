@@ -1,0 +1,20 @@
+{
+  "aws": {
+    "region": "us-east-1",
+    "bedrockModels": {
+      "text": "anthropic.claude-3-sonnet-20240229-v1:0",
+      "embedding": "amazon.titan-embed-text-v1"
+    }
+  },
+  "api": {
+    "localPort": 3000,
+    "frontendPort": 8080
+  },
+  "search": {
+    "apiKey": "YOUR_SEARCH_API_KEY",
+    "engineId": "YOUR_SEARCH_ENGINE_ID"
+  },
+  "knowledgeBase": {
+    "id": "YOUR_KNOWLEDGE_BASE_ID"
+  }
+}

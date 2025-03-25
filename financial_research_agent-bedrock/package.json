@@ -1,0 +1,20 @@
+{
+  "name": "financial-research-agent-bedrock",
+  "version": "1.0.0",
+  "description": "Financial Research Agent using AWS Bedrock",
+  "main": "local-server.js",
+  "scripts": {
+    "start": "node local-server.js",
+    "deploy": "bash deploy.sh",
+    "local": "bash start-local.sh",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "body-parser": "^1.20.2"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

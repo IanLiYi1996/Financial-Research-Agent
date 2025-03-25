@@ -1,0 +1,9 @@
+boto3>=1.28.0
+requests>=2.31.0
+pydantic>=2.0.0
+aws-cdk-lib>=2.0.0
+constructs>=10.0.0
+aws-cdk.aws-bedrock-alpha>=2.0.0-alpha.0
+express>=0.0.1
+cors>=2.8.5
+body-parser>=1.20.0
