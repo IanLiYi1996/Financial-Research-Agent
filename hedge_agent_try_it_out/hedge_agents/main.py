@@ -15,7 +15,7 @@ from multi_agent_orchestrator.storage import InMemoryChatStorage
 from multi_agent_orchestrator.utils import AgentTool
 
 # 导入自定义工具和会议系统
-from .tools import (
+from tools import (
     technical_indicator_analysis, 
     market_dynamics_annotation, 
     news_analysis,
@@ -23,8 +23,8 @@ from .tools import (
     market_dynamics_description,
     news_analysis_description
 )
-from .memory import HedgeAgentMemorySystem
-from .conferences import (
+from memory import HedgeAgentMemorySystem
+from conferences import (
     budget_allocation_conference_prompt,
     experience_sharing_conference_prompt,
     extreme_market_conference_prompt
@@ -32,6 +32,9 @@ from .conferences import (
 
 # 创建记忆系统
 memory_system = HedgeAgentMemorySystem()
+
+# 导入工具处理程序
+from tools import tool_handler
 
 # 创建比特币分析师
 bitcoin_analyst = BedrockLLMAgent(BedrockLLMAgentOptions(
@@ -41,7 +44,8 @@ bitcoin_analyst = BedrockLLMAgent(BedrockLLMAgentOptions(
     streaming=True,
     tool_config={
         'tool': technical_indicator_description + market_dynamics_description + news_analysis_description,
-        'toolMaxRecursions': 5
+        'toolMaxRecursions': 5,
+        'useToolHandler': tool_handler
     }
 ))
 
@@ -72,7 +76,8 @@ dj30_analyst = BedrockLLMAgent(BedrockLLMAgentOptions(
     streaming=True,
     tool_config={
         'tool': technical_indicator_description + market_dynamics_description + news_analysis_description,
-        'toolMaxRecursions': 5
+        'toolMaxRecursions': 5,
+        'useToolHandler': tool_handler
     }
 ))
 
@@ -103,7 +108,8 @@ fx_analyst = BedrockLLMAgent(BedrockLLMAgentOptions(
     streaming=True,
     tool_config={
         'tool': technical_indicator_description + market_dynamics_description + news_analysis_description,
-        'toolMaxRecursions': 5
+        'toolMaxRecursions': 5,
+        'useToolHandler': tool_handler
     }
 ))
 

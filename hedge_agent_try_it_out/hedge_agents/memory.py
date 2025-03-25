@@ -73,7 +73,7 @@ class HedgeAgentMemorySystem:
         self.general_experience[key] = entry
         return entry
     
-    async def retrieve_memories(self, query: str = None) -> Dict[str, Any]:
+    async def retrieve_memories(self, query: str = None) -> str:
         """
         检索记忆
         
@@ -81,9 +81,9 @@ class HedgeAgentMemorySystem:
         - query: 可选的查询字符串，用于过滤记忆
         
         返回:
-        - 包含三种记忆类型的字典
+        - 包含三种记忆类型的格式化字符串
         """
-        result = {
+        result_dict = {
             "market_information": {},
             "investment_reflection": {},
             "general_experience": {}
@@ -91,30 +91,60 @@ class HedgeAgentMemorySystem:
         
         # 如果没有查询，返回所有记忆
         if not query:
-            result["market_information"] = self.market_information
-            result["investment_reflection"] = self.investment_reflection
-            result["general_experience"] = self.general_experience
-            return result
+            result_dict["market_information"] = self.market_information
+            result_dict["investment_reflection"] = self.investment_reflection
+            result_dict["general_experience"] = self.general_experience
+        else:
+            # 如果有查询，过滤记忆
+            query = query.lower()
+            
+            # 过滤市场信息记忆
+            for key, entry in self.market_information.items():
+                if query in key.lower() or (isinstance(entry["value"], str) and query in entry["value"].lower()):
+                    result_dict["market_information"][key] = entry
+            
+            # 过滤投资反思记忆
+            for key, entry in self.investment_reflection.items():
+                if query in key.lower() or (isinstance(entry["value"], str) and query in entry["value"].lower()):
+                    result_dict["investment_reflection"][key] = entry
+            
+            # 过滤一般经验记忆
+            for key, entry in self.general_experience.items():
+                if query in key.lower() or (isinstance(entry["value"], str) and query in entry["value"].lower()):
+                    result_dict["general_experience"][key] = entry
         
-        # 如果有查询，过滤记忆
-        query = query.lower()
+        # 将字典转换为格式化的字符串
+        result_str = f"""
+记忆检索结果 {f'(查询: {query})' if query else '(所有记忆)'}
+时间戳: {datetime.now().isoformat()}
+
+1. 市场信息记忆 ({len(result_dict["market_information"])}项):
+"""
         
-        # 过滤市场信息记忆
-        for key, entry in self.market_information.items():
-            if query in key.lower() or (isinstance(entry["value"], str) and query in entry["value"].lower()):
-                result["market_information"][key] = entry
+        # 添加市场信息记忆
+        if result_dict["market_information"]:
+            for key, entry in result_dict["market_information"].items():
+                result_str += f"   - {key}: {entry['value']} (记录时间: {entry['timestamp']})\n"
+        else:
+            result_str += "   无相关记忆\n"
         
-        # 过滤投资反思记忆
-        for key, entry in self.investment_reflection.items():
-            if query in key.lower() or (isinstance(entry["value"], str) and query in entry["value"].lower()):
-                result["investment_reflection"][key] = entry
+        # 添加投资反思记忆
+        result_str += f"\n2. 投资反思记忆 ({len(result_dict['investment_reflection'])}项):\n"
+        if result_dict["investment_reflection"]:
+            for key, entry in result_dict["investment_reflection"].items():
+                result_str += f"   - {key}: {entry['value']} (记录时间: {entry['timestamp']})\n"
+        else:
+            result_str += "   无相关记忆\n"
         
-        # 过滤一般经验记忆
-        for key, entry in self.general_experience.items():
-            if query in key.lower() or (isinstance(entry["value"], str) and query in entry["value"].lower()):
-                result["general_experience"][key] = entry
+        # 添加一般经验记忆
+        result_str += f"\n3. 一般经验记忆 ({len(result_dict['general_experience'])}项):\n"
+        if result_dict["general_experience"]:
+            for key, entry in result_dict["general_experience"].items():
+                result_str += f"   - {key}: {entry['value']} (记录时间: {entry['timestamp']})\n"
+        else:
+            result_str += "   无相关记忆\n"
         
-        return result
+        return result_str
     
     async def get_market_information(self, key: str = None) -> Dict[str, Any]:
         """

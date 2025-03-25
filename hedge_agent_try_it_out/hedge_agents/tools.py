@@ -6,57 +6,69 @@ from datetime import datetime
 
 # 技术指标分析工具描述
 technical_indicator_description = [{
-    "name": "technical_indicator_analysis",
-    "description": "分析指定资产的技术指标，包括RSI、MACD、移动平均线等",
-    "input_schema": {
-        "type": "object",
-        "properties": {
-            "symbol": {
-                "type": "string",
-                "description": "资产代码，如BTC、AAPL、EUR/USD等"
-            },
-            "timeframe": {
-                "type": "string",
-                "description": "时间周期，如1d（日）、4h（4小时）、1h（小时）、15m（15分钟）等"
+    "toolSpec": {
+        "name": "technical_indicator_analysis",
+        "description": "分析指定资产的技术指标，包括RSI、MACD、移动平均线等",
+        "inputSchema": {
+            "json": {
+                "type": "object",
+                "properties": {
+                    "symbol": {
+                        "type": "string",
+                        "description": "资产代码，如BTC、AAPL、EUR/USD等"
+                    },
+                    "timeframe": {
+                        "type": "string",
+                        "description": "时间周期，如1d（日）、4h（4小时）、1h（小时）、15m（15分钟）等"
+                    }
+                },
+                "required": ["symbol"]
             }
-        },
-        "required": ["symbol"]
+        }
     }
 }]
 
 # 市场动态注释工具描述
 market_dynamics_description = [{
-    "name": "market_dynamics_annotation",
-    "description": "分析市场动态并提供注释，包括波动性、趋势、成交量等",
-    "input_schema": {
-        "type": "object",
-        "properties": {
-            "symbol": {
-                "type": "string",
-                "description": "资产代码，如BTC、AAPL、EUR/USD等"
+    "toolSpec": {
+        "name": "market_dynamics_annotation",
+        "description": "分析市场动态并提供注释，包括波动性、趋势、成交量等",
+        "inputSchema": {
+            "json": {
+                "type": "object",
+                "properties": {
+                    "symbol": {
+                        "type": "string",
+                        "description": "资产代码，如BTC、AAPL、EUR/USD等"
+                    }
+                },
+                "required": ["symbol"]
             }
-        },
-        "required": ["symbol"]
+        }
     }
 }]
 
 # 新闻分析工具描述
 news_analysis_description = [{
-    "name": "news_analysis",
-    "description": "分析与特定资产相关的新闻，评估市场情绪和潜在影响",
-    "input_schema": {
-        "type": "object",
-        "properties": {
-            "symbol": {
-                "type": "string",
-                "description": "资产代码，如BTC、AAPL、EUR/USD等"
-            },
-            "days": {
-                "type": "number",
-                "description": "分析最近几天的新闻，默认为3天"
+    "toolSpec": {
+        "name": "news_analysis",
+        "description": "分析与特定资产相关的新闻，评估市场情绪和潜在影响",
+        "inputSchema": {
+            "json": {
+                "type": "object",
+                "properties": {
+                    "symbol": {
+                        "type": "string",
+                        "description": "资产代码，如BTC、AAPL、EUR/USD等"
+                    },
+                    "days": {
+                        "type": "number",
+                        "description": "分析最近几天的新闻，默认为3天"
+                    }
+                },
+                "required": ["symbol"]
             }
-        },
-        "required": ["symbol"]
+        }
     }
 }]
 
@@ -275,8 +287,81 @@ news_data = {
     ]
 }
 
+# 工具处理程序
+async def tool_handler(response, conversation):
+    """
+    处理工具调用
+    
+    参数:
+    - provider_type: 提供者类型
+    - response: 响应
+    - conversation: 对话历史
+    
+    返回:
+    - 工具调用结果
+    """
+    from multi_agent_orchestrator.types import ConversationMessage, ParticipantRole
+    
+    response_content_blocks = response.content
+    
+    # 初始化空的工具结果列表
+    tool_results = []
+    
+    if not response_content_blocks:
+        raise ValueError("No content blocks in response")
+    
+    for content_block in response_content_blocks:
+        if "text" in content_block:
+            # 处理文本内容（如果需要）
+            pass
+        
+        if "toolUse" in content_block:
+            tool_use_block = content_block["toolUse"]
+            tool_use_name = tool_use_block.get("name")
+            
+            if tool_use_name == "technical_indicator_analysis":
+                tool_response = await technical_indicator_analysis(
+                    tool_use_block["input"].get("symbol", ""),
+                    tool_use_block["input"].get("timeframe", "1d")
+                )
+                tool_results.append({
+                    "toolResult": {
+                        "toolUseId": tool_use_block["toolUseId"],
+                        "content": [{"text": tool_response}],
+                    }
+                })
+            elif tool_use_name == "market_dynamics_annotation":
+                tool_response = await market_dynamics_annotation(
+                    tool_use_block["input"].get("symbol", "")
+                )
+                tool_results.append({
+                    "toolResult": {
+                        "toolUseId": tool_use_block["toolUseId"],
+                        "content": [{"text": tool_response}],
+                    }
+                })
+            elif tool_use_name == "news_analysis":
+                tool_response = await news_analysis(
+                    tool_use_block["input"].get("symbol", ""),
+                    tool_use_block["input"].get("days", 3)
+                )
+                tool_results.append({
+                    "toolResult": {
+                        "toolUseId": tool_use_block["toolUseId"],
+                        "content": [{"text": tool_response}],
+                    }
+                })
+    
+    # 将工具结果嵌入到新的用户消息中
+    message = ConversationMessage(
+        role=ParticipantRole.USER.value,
+        content=tool_results
+    )
+    
+    return message
+
 # 技术指标分析工具
-async def technical_indicator_analysis(symbol: str, timeframe: str = "1d") -> Dict[str, Any]:
+async def technical_indicator_analysis(symbol: str, timeframe: str = "1d") -> str:
     """
     分析指定资产的技术指标
     
@@ -285,23 +370,20 @@ async def technical_indicator_analysis(symbol: str, timeframe: str = "1d") -> Di
     - timeframe: 时间周期，如1d（日）、4h（4小时）、1h（小时）、15m（15分钟）等
     
     返回:
-    - 技术指标分析结果
+    - 技术指标分析结果（字符串格式）
     """
     # 模拟API调用延迟
     await asyncio.sleep(0.5)
     
     # 检查资产是否存在
     if symbol not in market_data:
-        return {
-            "error": f"未找到资产 {symbol} 的数据",
-            "timestamp": datetime.now().isoformat()
-        }
+        return f"未找到资产 {symbol} 的数据。时间戳: {datetime.now().isoformat()}"
     
     # 获取资产数据
     asset_data = market_data[symbol]
     
     # 构建分析结果
-    result = {
+    result_dict = {
         "symbol": symbol,
         "timeframe": timeframe,
         "timestamp": datetime.now().isoformat(),
@@ -317,10 +399,31 @@ async def technical_indicator_analysis(symbol: str, timeframe: str = "1d") -> Di
         "analysis_summary": get_technical_analysis_summary(asset_data)
     }
     
-    return result
+    # 将字典转换为格式化的字符串
+    result_str = f"""
+技术指标分析结果 - {symbol} ({timeframe})
+时间戳: {result_dict['timestamp']}
+当前价格: {result_dict['price']}
+24小时变化: {result_dict['change_24h']}%
+
+技术指标:
+- RSI: {result_dict['technical_indicators']['rsi']}
+- MACD: {result_dict['technical_indicators']['macd']}
+- 移动平均线:
+  * 50日均线: {result_dict['technical_indicators']['moving_averages']['MA_50']}
+  * 200日均线: {result_dict['technical_indicators']['moving_averages']['MA_200']}
+  * 20日指数均线: {result_dict['technical_indicators']['moving_averages']['EMA_20']}
+
+支撑位: {', '.join(str(level) for level in result_dict['support_levels'])}
+阻力位: {', '.join(str(level) for level in result_dict['resistance_levels'])}
+
+分析摘要: {result_dict['analysis_summary']}
+"""
+    
+    return result_str
 
 # 市场动态注释工具
-async def market_dynamics_annotation(symbol: str) -> Dict[str, Any]:
+async def market_dynamics_annotation(symbol: str) -> str:
     """
     分析市场动态并提供注释
     
@@ -328,39 +431,46 @@ async def market_dynamics_annotation(symbol: str) -> Dict[str, Any]:
     - symbol: 资产代码，如BTC、AAPL、EUR/USD等
     
     返回:
-    - 市场动态分析结果
+    - 市场动态分析结果（字符串格式）
     """
     # 模拟API调用延迟
     await asyncio.sleep(0.5)
     
     # 检查资产是否存在
     if symbol not in market_data:
-        return {
-            "error": f"未找到资产 {symbol} 的数据",
-            "timestamp": datetime.now().isoformat()
-        }
+        return f"未找到资产 {symbol} 的数据。时间戳: {datetime.now().isoformat()}"
     
     # 获取资产数据
     asset_data = market_data[symbol]
     
-    # 构建分析结果
-    result = {
-        "symbol": symbol,
-        "timestamp": datetime.now().isoformat(),
-        "market_dynamics": {
-            "volatility": asset_data["volatility"],
-            "trend": asset_data["trend"],
-            "volume_trend": asset_data["volume_trend"]
-        },
-        "market_sentiment": get_market_sentiment(asset_data),
-        "risk_level": get_risk_level(asset_data),
-        "analysis_summary": get_market_dynamics_summary(asset_data, symbol)
-    }
+    # 获取分析数据
+    volatility = asset_data["volatility"]
+    trend = asset_data["trend"]
+    volume_trend = asset_data["volume_trend"]
+    market_sentiment = get_market_sentiment(asset_data)
+    risk_level = get_risk_level(asset_data)
+    analysis_summary = get_market_dynamics_summary(asset_data, symbol)
     
-    return result
+    # 构建分析结果字符串
+    result_str = f"""
+市场动态分析 - {symbol}
+时间戳: {datetime.now().isoformat()}
+
+市场动态:
+- 波动性: {volatility}
+- 趋势: {trend}
+- 成交量趋势: {volume_trend}
+
+市场情绪: {market_sentiment}
+风险水平: {risk_level}
+
+分析摘要: {analysis_summary}
+"""
+    
+    return result_str
 
 # 新闻分析工具
-async def news_analysis(symbol: str, days: int = 3) -> Dict[str, Any]:
+async def news_analysis(symbol: str, days: int = 3) -> str:
     """
     分析与特定资产相关的新闻
     
@@ -369,17 +479,14 @@ async def news_analysis(symbol: str, days: int = 3) -> Dict[str, Any]:
     - days: 分析最近几天的新闻，默认为3天
     
     返回:
-    - 新闻分析结果
+    - 新闻分析结果（字符串格式）
     """
     # 模拟API调用延迟
     await asyncio.sleep(0.5)
     
     # 检查资产是否存在
     if symbol not in news_data:
-        return {
-            "error": f"未找到资产 {symbol} 的新闻数据",
-            "timestamp": datetime.now().isoformat()
-        }
+        return f"未找到资产 {symbol} 的新闻数据。时间戳: {datetime.now().isoformat()}"
     
     # 获取资产新闻数据
     asset_news = news_data[symbol]
@@ -397,28 +504,42 @@ async def news_analysis(symbol: str, days: int = 3) -> Dict[str, Any]:
     
     # 确定主要情绪
     if sentiment_counts["positive"] > sentiment_counts["negative"]:
-        main_sentiment = "positive"
+        main_sentiment = "积极"
     elif sentiment_counts["positive"] < sentiment_counts["negative"]:
-        main_sentiment = "negative"
+        main_sentiment = "消极"
     else:
-        main_sentiment = "neutral"
+        main_sentiment = "中性"
     
-    # 构建分析结果
-    result = {
-        "symbol": symbol,
-        "timestamp": datetime.now().isoformat(),
-        "analyzed_days": days,
-        "news_count": len(recent_news),
-        "news_items": recent_news,
-        "sentiment_analysis": {
-            "main_sentiment": main_sentiment,
-            "sentiment_distribution": sentiment_counts,
-            "impact_distribution": impact_counts
-        },
-        "analysis_summary": get_news_analysis_summary(recent_news, symbol)
-    }
+    # 构建新闻列表字符串
+    news_list_str = ""
+    for i, news in enumerate(recent_news, 1):
+        news_list_str += f"{i}. {news['date']} - {news['title']} (情绪: {news['sentiment']}, 影响: {news['impact']})\n"
     
-    return result
+    # 构建分析结果字符串
+    result_str = f"""
+新闻分析结果 - {symbol}
+时间戳: {datetime.now().isoformat()}
+分析天数: {days}
+新闻数量: {len(recent_news)}
+
+新闻列表:
+{news_list_str}
+
+情绪分析:
+- 主要情绪: {main_sentiment}
+- 积极新闻: {sentiment_counts["positive"]}
+- 中性新闻: {sentiment_counts["neutral"]}
+- 消极新闻: {sentiment_counts["negative"]}
+
+影响分布:
+- 高影响: {impact_counts["high"]}
+- 中等影响: {impact_counts["medium"]}
+- 低影响: {impact_counts["low"]}
+
+分析摘要: {get_news_analysis_summary(recent_news, symbol)}
+"""
+    
+    return result_str
 
 # 辅助函数：获取技术分析摘要
 def get_technical_analysis_summary(asset_data: Dict[str, Any]) -> str:
