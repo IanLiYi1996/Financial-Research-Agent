@@ -59,7 +59,8 @@ ANTHROPIC_API_KEY=your_anthropic_api_key
 运行主程序：
 
 ```bash
-python -m hedge_agents.main
+cd hedge_agents
+python -m main
 ```
 
 系统启动后，您可以：
