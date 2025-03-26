@@ -3,6 +3,14 @@ import asyncio
 import json
 import random
 from datetime import datetime
+from memory import (
+    HedgeAgentMemorySystem, 
+    initialize_memory_system,
+    update_market_information,
+    update_investment_reflection,
+    update_general_experience,
+    retrieve_memories
+)
 
 # 技术指标分析工具描述
 technical_indicator_description = [{
@@ -345,6 +353,55 @@ async def tool_handler(provider_type, response, conversation):
                     tool_use_block["input"].get("symbol", ""),
                     tool_use_block["input"].get("days", 3)
                 )
+                tool_results.append({
+                    "toolResult": {
+                        "toolUseId": tool_use_block["toolUseId"],
+                        "content": [{"text": tool_response}],
+                    }
+                })
+            # 处理记忆系统工具
+            elif tool_use_name == "update_market_information":
+                key = tool_use_block["input"].get("key", "")
+                value = tool_use_block["input"].get("value", "")
+                tool_response = await update_market_information(key, value)
+                # 确保返回字符串而不是字典
+                if isinstance(tool_response, dict):
+                    tool_response = json.dumps(tool_response)
+                tool_results.append({
+                    "toolResult": {
+                        "toolUseId": tool_use_block["toolUseId"],
+                        "content": [{"text": tool_response}],
+                    }
+                })
+            elif tool_use_name == "update_investment_reflection":
+                key = tool_use_block["input"].get("key", "")
+                value = tool_use_block["input"].get("value", "")
+                tool_response = await update_investment_reflection(key, value)
+                # 确保返回字符串而不是字典
+                if isinstance(tool_response, dict):
+                    tool_response = json.dumps(tool_response)
+                tool_results.append({
+                    "toolResult": {
+                        "toolUseId": tool_use_block["toolUseId"],
+                        "content": [{"text": tool_response}],
+                    }
+                })
+            elif tool_use_name == "update_general_experience":
+                key = tool_use_block["input"].get("key", "")
+                value = tool_use_block["input"].get("value", "")
+                tool_response = await update_general_experience(key, value)
+                # 确保返回字符串而不是字典
+                if isinstance(tool_response, dict):
+                    tool_response = json.dumps(tool_response)
+                tool_results.append({
+                    "toolResult": {
+                        "toolUseId": tool_use_block["toolUseId"],
+                        "content": [{"text": tool_response}],
+                    }
+                })
+            elif tool_use_name == "retrieve_memories":
+                query = tool_use_block["input"].get("query", None)
+                tool_response = await retrieve_memories(query)
                 tool_results.append({
                     "toolResult": {
                         "toolUseId": tool_use_block["toolUseId"],

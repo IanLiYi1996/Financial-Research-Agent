@@ -2,6 +2,65 @@ from typing import Dict, List, Any
 import json
 from datetime import datetime
 
+# 导出的工具函数
+async def update_market_information(key: str, value: Any) -> str:
+    """
+    更新市场信息记忆
+    
+    参数:
+    - key: 记忆键，如"BTC_trend"、"DJ30_support_levels"等
+    - value: 记忆值，可以是任何类型
+    
+    返回:
+    - 更新结果（字符串格式）
+    """
+    memory_system = HedgeAgentMemorySystem()
+    entry = await memory_system.update_market_information(key, value)
+    return f"已更新市场信息记忆: {key} = {value}"
+
+async def update_investment_reflection(key: str, value: Any) -> str:
+    """
+    更新投资反思记忆
+    
+    参数:
+    - key: 记忆键，如"BTC_buy_20250320"、"FX_strategy_review"等
+    - value: 记忆值，可以是任何类型
+    
+    返回:
+    - 更新结果（字符串格式）
+    """
+    memory_system = HedgeAgentMemorySystem()
+    entry = await memory_system.update_investment_reflection(key, value)
+    return f"已更新投资反思记忆: {key} = {value}"
+
+async def update_general_experience(key: str, value: Any) -> str:
+    """
+    更新一般经验记忆
+    
+    参数:
+    - key: 记忆键，如"market_crash_response"、"volatility_strategy"等
+    - value: 记忆值，可以是任何类型
+    
+    返回:
+    - 更新结果（字符串格式）
+    """
+    memory_system = HedgeAgentMemorySystem()
+    entry = await memory_system.update_general_experience(key, value)
+    return f"已更新一般经验记忆: {key} = {value}"
+
+async def retrieve_memories(query: str = None) -> str:
+    """
+    检索记忆
+    
+    参数:
+    - query: 可选的查询字符串，用于过滤记忆
+    
+    返回:
+    - 包含三种记忆类型的格式化字符串
+    """
+    memory_system = HedgeAgentMemorySystem()
+    return await memory_system.retrieve_memories(query)
+
 class HedgeAgentMemorySystem:
     """
     HedgeAgents-v2记忆系统，用于存储和检索三种类型的记忆：

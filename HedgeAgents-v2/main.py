@@ -226,6 +226,9 @@ hedge_fund_manager = SupervisorAgent(
         ]
     ))
 
+# 全局配置
+AUTO_MODE = True  # 是否启用自动会议模式
+
 # 检测会议请求
 def detect_conference_request(user_input: str) -> tuple:
     """
@@ -235,27 +238,34 @@ def detect_conference_request(user_input: str) -> tuple:
     - user_input: 用户输入
     
     返回:
-    - (是否是会议请求, 会议类型)
+    - (是否是会议请求, 会议类型, 是否自动模式)
     """
     user_input_lower = user_input.lower()
     
+    # 检测是否指定了自动/手动模式
+    auto_mode = AUTO_MODE
+    if "自动模式" in user_input_lower:
+        auto_mode = True
+    elif "手动模式" in user_input_lower:
+        auto_mode = False
+    
     if "预算分配会议" in user_input_lower or "预算会议" in user_input_lower:
-        return (True, "budget_allocation")
+        return (True, "budget_allocation", auto_mode)
     elif "经验分享会议" in user_input_lower or "经验会议" in user_input_lower:
-        return (True, "experience_sharing")
+        return (True, "experience_sharing", auto_mode)
     elif "极端市场会议" in user_input_lower or "极端会议" in user_input_lower:
-        return (True, "extreme_market")
+        return (True, "extreme_market", auto_mode)
     elif "下一轮" in user_input_lower or "继续会议" in user_input_lower:
-        return (True, "next_round")
+        return (True, "next_round", auto_mode)
     elif "结束会议" in user_input_lower or "总结会议" in user_input_lower:
-        return (True, "conclude")
+        return (True, "conclude", auto_mode)
     else:
-        return (False, None)
+        return (False, None, auto_mode)
 
 async def handle_request(_orchestrator: MultiAgentOrchestrator, _user_input: str, _user_id: str, _session_id: str):
     try:
         # 检测是否是会议请求
-        is_conference, conference_type = detect_conference_request(_user_input)
+        is_conference, conference_type, auto_mode = detect_conference_request(_user_input)
         
         if is_conference:
             # 处理会议请求
@@ -275,7 +285,10 @@ async def handle_request(_orchestrator: MultiAgentOrchestrator, _user_input: str
                     else:
                         # 会议继续
                         current_round = conference.current_round + 1
-                        print(f"\n\033[34m会议进入第{current_round}轮讨论。请在讨论结束后输入\"下一轮\"继续，或\"结束会议\"来总结会议结果。\033[0m")
+                        mode_text = "自动" if conference.auto_mode else "手动"
+                        print(f"\n\033[34m会议进入第{current_round}轮讨论（{mode_text}模式）。" + 
+                              ("" if conference.auto_mode else "请在讨论结束后输入\"下一轮\"继续，或\"结束会议\"来总结会议结果。") + 
+                              "\033[0m")
                 else:
                     print("\n\033[34m当前没有正在进行的会议。请先召开一个会议。\033[0m")
             elif conference_type == "conclude":
@@ -299,14 +312,16 @@ async def handle_request(_orchestrator: MultiAgentOrchestrator, _user_input: str
                         conference_type=conference_type,
                         supervisor_agent=hedge_fund_manager,
                         team_agents=[bitcoin_analyst, dj30_analyst, fx_analyst],
-                        max_rounds=3
+                        max_rounds=3,
+                        auto_mode=auto_mode,
+                        orchestrator=_orchestrator
                     )
                     
                     # 存储会议
                     active_conferences[_session_id] = conference
                     
                     # 启动会议
-                    await conference.start_conference(_user_id, _session_id)
+                    start_message = await conference.start_conference(_user_id, _session_id)
                     
                     # 使用orchestrator处理会议提示
                     prompt = get_conference_prompt(conference_type)
@@ -316,7 +331,10 @@ async def handle_request(_orchestrator: MultiAgentOrchestrator, _user_input: str
                     classifier_result = ClassifierResult(selected_agent=hedge_fund_manager, confidence=1.0)
                     await _orchestrator.agent_process_request(prompt, _user_id, _session_id, classifier_result)
                     
-                    print(f"\n\033[34m会议已开始，第1轮讨论正在进行。请在讨论结束后输入\"下一轮\"继续，或\"结束会议\"来总结会议结果。\033[0m")
+                    mode_text = "自动" if auto_mode else "手动"
+                    print(f"\n\033[34m会议已开始，第1轮讨论正在进行（{mode_text}模式）。" + 
+                          ("" if auto_mode else "请在讨论结束后输入\"下一轮\"继续，或\"结束会议\"来总结会议结果。") + 
+                          "\033[0m")
         else:
             # 处理普通请求
             classifier_result = ClassifierResult(selected_agent=hedge_fund_manager, confidence=1.0)
@@ -380,7 +398,13 @@ if __name__ == "__main__":
 4. 请求召开极端市场会议
 5. 获取综合投资建议
 
-会议将进行多轮讨论，您可以通过输入\"下一轮\"继续会议，或\"结束会议\"来总结会议结果。
+会议模式：
+- 自动模式（默认）：由Supervisor自动管控会议流程，评估讨论质量并决定是否继续或结束会议
+- 手动模式：您需要通过输入"下一轮"继续会议，或"结束会议"来总结会议结果
+
+您可以在召开会议时指定模式，例如：
+- "请召开预算分配会议（自动模式）"
+- "请召开经验分享会议（手动模式）"
 """)
 
     # 创建事件循环
