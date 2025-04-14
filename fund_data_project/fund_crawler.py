@@ -185,7 +185,7 @@ def get_fund_basic_info():
         print(f"获取基金基本信息失败: {e}")
         return pd.DataFrame()
 
-def get_fund_nav_info(fund_codes=None, start_date="20000101", end_date=None, output_file=None, db_name=None, table_name=None, incremental=True):
+def get_fund_nav_info(fund_codes=None, start_date="20250101", end_date=None, output_file=None, db_name=None, table_name=None, incremental=True):
     """
     获取基金净值信息，支持增量更新和断点续传
     
@@ -274,7 +274,7 @@ def get_fund_nav_info(fund_codes=None, start_date="20000101", end_date=None, out
     
     return all_nav_df
 
-def get_fund_position_info(fund_codes=None, year="2023", output_file=None, db_name=None, table_name=None, incremental=True):
+def get_fund_position_info(fund_codes=None, year="2024", output_file=None, db_name=None, table_name=None, incremental=True):
     """
     获取基金持仓信息，支持增量更新和断点续传
     
@@ -491,7 +491,7 @@ def get_fund_performance_info(output_file=None, db_name=None, table_name=None):
         print(f"获取基金业绩信息失败: {e}")
         return pd.DataFrame()
 
-def get_fund_industry_allocation(fund_codes=None, year="2023", output_file=None, db_name=None, table_name=None, incremental=True):
+def get_fund_industry_allocation(fund_codes=None, year="2024", output_file=None, db_name=None, table_name=None, incremental=True):
     """
     获取基金行业配置信息，支持增量更新和断点续传
     
